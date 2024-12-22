@@ -16,7 +16,7 @@ WIP
 
 ## ⚜️ License
 
-`FlxCs` is distributed under the terms of the MIT license.
+`flx.go` is distributed under the terms of the MIT license.
 
 See [`LICENSE`](./LICENSE) for details.
 
