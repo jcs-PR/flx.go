@@ -28,6 +28,6 @@ jobs:
 
     - uses: actions/checkout@v4
 
-    - name: Install
+    - name: Run tests
       run: |
-        go test /test/
+        go test ./test/
