@@ -4,6 +4,8 @@
 # flx.go
 > Rewrite emacs-flx in Go
 
+[![CI](https://github.com/the-flx/flx.go/actions/workflows/test.yml/badge.svg)](https://github.com/the-flx/flx.go/actions/workflows/test.yml)
+
 ## 🔨 Usage
 
 WIP
