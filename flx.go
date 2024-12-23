@@ -305,6 +305,7 @@ func FindBestMatch(imatch *[]Result, strInfo map[int][]int, heatmap []int, great
 				FindBestMatch(&elemGroup, clonedStrInfo, clonedHeatmap, &val, query, queryLen, qIndex+1, matchCache)
 
 				for _, elem := range elemGroup {
+					// XXX: Not sure why it has empty result.
 					if reflect.DeepEqual(elem, Result{}) {
 						continue
 					}
