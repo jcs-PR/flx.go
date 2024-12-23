@@ -8,11 +8,19 @@
 
 ## 🔨 Usage
 
-WIP
+```go
+import "github.com/the-flx/flx.go"
+
+fmt.Println(flx.Score("switch-to-buffer", "stb").Score)  // 237
+```
 
 ## 🛠️ Development
 
-WIP
+To run tests:
+
+```sh
+$ go test ./test/
+```
 
 ## ⚜️ License
 
