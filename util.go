@@ -32,6 +32,14 @@ func toRune(str string) rune {
 	return runes[0]
 }
 
+func fillSlice(len int, defaultVal int) []int {
+	var arr []int = []int{}
+	for range len {
+		arr = append(arr, defaultVal)
+	}
+	return arr
+}
+
 /* Dictionary */
 
 func dictSet(result map[int][]Result, key *int, val []Result) map[int][]Result {
