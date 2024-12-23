@@ -10,8 +10,8 @@
 package flx_test
 
 import (
-	"reflect"
-	"slices"
+	//"reflect"
+	//"slices"
 	"testing"
 
 	"github.com/the-flx/flx.go"
@@ -98,3 +98,24 @@ import (
 // 		t.Errorf("Test `BiggerSublit` 2: %v", result)
 // 	}
 // }
+
+func TestScore1(t *testing.T) {
+	result := flx.Score("switch-to-buffer", "stb")
+	if result.Score != 237 {
+		t.Errorf("Test `Score` 1: %v", result)
+	}
+}
+
+func TestScore2(t *testing.T) {
+	result := flx.Score("TestSomeFunctionExterme", "met")
+	if result.Score != 57 {
+		t.Errorf("Test `Score` 2: %v", result)
+	}
+}
+
+func TestScore3(t *testing.T) {
+	result := flx.Score("MetaX_Version", "met")
+	if result.Score != 211 {
+		t.Errorf("Test `Score` 3: %v", result)
+	}
+}

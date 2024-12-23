@@ -10,6 +10,8 @@
 package flx
 
 import (
+	"math"
+	"reflect"
 	"slices"
 	"strings"
 )
@@ -121,7 +123,7 @@ func GetHeatmapStr(str string, groupSeparator *rune) []int {
 
 	// Establish baseline mapping
 	var lastCh *rune = nil
-	var groupWordCount int = 0
+	var groupWordCount int
 	var index1 int = 0
 
 	for _, ch := range str {
@@ -187,7 +189,7 @@ func GetHeatmapStr(str string, groupSeparator *rune) []int {
 			basepathP = true
 		}
 
-		var num int = 0
+		var num int
 
 		if basepathP {
 			// ++++ basepath separator-count boosts
@@ -209,8 +211,7 @@ func GetHeatmapStr(str string, groupSeparator *rune) []int {
 		beg := (groupStart + 1)
 		scores = IncVec(scores, &num, &beg, lastGroupLimit)
 
-		var cddrGroup []int = make([]int, len(group))
-		copy(cddrGroup, group[:])
+		var cddrGroup []int = sliceCopy(group) // clone
 
 		cddrGroup = slices.Delete(cddrGroup, 0, 2)
 
@@ -264,16 +265,87 @@ func BiggerSublist(sorted []int, val *int) []int {
 	return result
 }
 
-// Recursively compute the best match for a string, passed as `str-info` and
+// Recursively compute the best match for a string, passed as `strInfo` and
 // `heatmap`, according to `query`.
-func FindBestMatch() {
-	// TODO: ..
+func FindBestMatch(imatch *[]Result, strInfo map[int][]int, heatmap []int, greaterThan *int, query string, queryLen int, qIndex int, matchCache *map[int][]Result) {
+	var greaterNum int = 0
+	if greaterThan != nil {
+		greaterNum = *greaterThan
+	}
+	var hashKey int = qIndex + (greaterNum * queryLen)
+	var hashVal []Result = dictGet(matchCache, &hashKey)
+
+	if hashVal != nil {
+		clear(*imatch)
+		for _, val := range hashVal {
+			*imatch = append(*imatch, val)
+		}
+	} else {
+		var uchar int = int(strAt(query, qIndex))
+		var sorted = dictGet(&strInfo, &uchar)
+		var indexes []int = BiggerSublist(sorted, greaterThan)
+		var tempScore int
+		var bestScore int = math.MinInt32
+
+		if qIndex >= queryLen-1 {
+			// At the tail end of the recursion, simply generate all possible
+			// matches with their scores and return the list to parent.
+			for _, val := range indexes {
+				var indices []int = []int{}
+				indices = append(indices, val)
+				*imatch = append(*imatch, Result{indices, heatmap[val], 0})
+			}
+		} else {
+			for _, val := range indexes {
+				var elemGroup []Result = []Result{}
+
+				var clonedStrInfo map[int][]int = dictCopy(strInfo) // clone
+				var clonedHeatmap []int = sliceCopy(heatmap)        // clone
+
+				FindBestMatch(&elemGroup, clonedStrInfo, clonedHeatmap, &val, query, queryLen, qIndex+1, matchCache)
+
+				for _, elem := range elemGroup {
+					if reflect.DeepEqual(elem, Result{}) {
+						continue
+					}
+
+					var caar int = elem.Indices[0]
+					var cadr int = elem.Score
+					var cddr int = elem.Tail
+
+					if (caar - 1) == val {
+						tempScore = cadr + heatmap[val] + (min(cddr, 3) * 15) + 60
+					} else {
+						tempScore = cadr + heatmap[val]
+					}
+
+					// We only care about the optimal match, so only forward the match
+					// with the best score to parent
+					if tempScore > bestScore {
+						bestScore = tempScore
+
+						clear(*imatch)
+						var indices []int = sliceCopy(elem.Indices)
+						indices = append([]int{val}, indices...)
+						var tail int = 0
+						if (caar - 1) == val {
+							tail = cddr + 1
+						}
+						*imatch = append(*imatch, Result{indices, tempScore, tail})
+					}
+				}
+			}
+		}
+
+		// Calls are cached to avoid exponential time complexity
+		dictSet(matchCache, &hashKey, sliceCopy(*imatch))
+	}
 }
 
 type Result struct {
-	indices []int
-	score   int
-	tail    int
+	Indices []int
+	Score   int
+	Tail    int
 }
 
 // Return best score matching `query` against `str`.
@@ -282,5 +354,25 @@ func Score(str string, query string) *Result {
 		return nil
 	}
 
-	return &Result{}
+	var strInfo map[int][]int = GetHashForString(str)
+	var heatmap = GetHeatmapStr(str, nil)
+
+	var queryLen = len(query)
+	var fullMatchBoost bool = (1 < queryLen) && (queryLen < 5)
+	var matchCache map[int][]Result = map[int][]Result{}
+	var optimalMatch []Result = []Result{}
+	FindBestMatch(&optimalMatch, strInfo, heatmap, nil, query, queryLen, 0, &matchCache)
+
+	if len(optimalMatch) == 0 {
+		return nil
+	}
+
+	var result *Result = &optimalMatch[0]
+	var caar int = len(result.Indices)
+
+	if fullMatchBoost && caar == len(str) {
+		result.Score += 10000
+	}
+
+	return result
 }
